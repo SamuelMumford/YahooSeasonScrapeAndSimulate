@@ -137,7 +137,9 @@ print("data?")
 #Find the button to click back week by week
 python_button = driver.find_elements_by_xpath("/html/body/div[1]/div[2]/div[2]/div[2]/div/div/div[2]/div[2]/section[1]/div/div/div[3]/section[2]/header/div/span/a[1]/span")[0]
 #If the game showing is a game that has been played, don't click away yet
-if(settings.ShowingPlayed):
+SP = settings.ShowingPlayed
+print(SP)
+if(not SP):
     python_button.click()
     time.sleep(SLEEP_SECONDS)
 #Get the page info from the most recently played week
@@ -167,13 +169,14 @@ with open('oldGames.txt', 'w') as file:
 #Go back to the current week to get the future game info
 driver.get(ad1)
 time.sleep(SLEEP_SECONDS)
-content = driver.page_source
-bs = BeautifulSoup(content, features="html.parser")
 #Now click forward if the initially displayed game has already been played
 python_button = driver.find_elements_by_xpath("/html/body/div[1]/div[2]/div[2]/div[2]/div/div/div[2]/div[2]/section[1]/div/div/div[3]/section[2]/header/div/span/a[3]/span")[0]
-if(not settings.ShowingPlayed):
+if(SP):
     python_button.click()
     time.sleep(SLEEP_SECONDS)
+    print('pre-clicked')
+content = driver.page_source
+bs = BeautifulSoup(content, features="html.parser")
 gamesLeft = 13-startWeek
 
 #Get the page info for each week, then click to the next week until hitting week 13

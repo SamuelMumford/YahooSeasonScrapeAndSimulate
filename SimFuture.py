@@ -32,9 +32,11 @@ weeks = int(games[0][0])
 m = 3
 #Find your team names
 records = [[0] * m for i in range(teams)]
+recordsSim = [[0] * m for i in range(teams)]
 names = [None]*teams
 for i in range(0, teams):
     records[i][0] = games[i][1]
+    recordsSim[i][0] = games[i][1]
     names[i] = games[i][1]
 
 #Find the number of wins for each team and their average score
@@ -47,16 +49,41 @@ for i in range(0, teams*weeks):
     if(score > oppoScore):
         records[i%teams][1] += 1
 
+mini = 65
+#Find the number of wins for each team and their average score
+for i in range(0, teams*weeks):
+    score = float(games[i][3])
+    recordsSim[i%teams][2] += max(score, mini)/weeks
+    oppo = games[i][2]
+    index = names.index(oppo)
+    oppoScore = float(games[(i//teams)*teams + index][3])
+    if(score > oppoScore):
+        recordsSim[i%teams][1] += 1
+
 #Find the standard deviation in scores, used to simulate games
 devs = np.zeros(teams)
 for i in range(0, teams*weeks):
-    score = float(games[i][3])
+    score = max(float(games[i][3]), mini)
     devs[i%teams] += score**2
 devs = devs/weeks
 
 for i in range(0, teams):
-    devs[i] = devs[i] - (records[i][2])**2
+    devs[i] = devs[i] - (recordsSim[i][2])**2
 scoreDev = np.mean(np.sqrt(devs))
+print(names)
+print(np.sqrt(devs))
+print(scoreDev)
+
+sortDs = np.argsort(np.sqrt(devs))
+namessort = np.array(names)[sortDs]
+
+index = 1.5*np.arange(teams)
+bar_width = 0.8
+
+rects1 = plt.barh(index, np.sqrt(devs)[sortDs], bar_width)
+plt.xlabel('Score Std. Dev.')
+plt.yticks(index, namessort)
+plt.show()
 
 #Also keep track of the total score, good for cross validation as this is what 
 #Yahoo does
@@ -64,6 +91,7 @@ recs = sorted(records, key=itemgetter(2), reverse=True)
 recs = sorted(recs, key=itemgetter(1), reverse=True)
 for i in range(0, teams):
     recs[i][2] *= weeks
+    recordsSim[i][2] *= weeks
 print(records)
 
 #Open the file with the list of upcoming game info
@@ -103,10 +131,14 @@ for i in range(0, sims):
         print(100.0*i/sims)
     m = 3
     recTemp = [[0] * m for j in range(teams)]
+    recSim = [[0] * m for j in range(teams)]
     for p in range(0, m):
         for q in range(0, teams):
             recTemp[q][p] = records[q][p]
-    subRs = makePred(recTemp, teams, totWeeks, weeks, scoreDev, names)
+            recSim[q][p] = recordsSim[q][p]
+    for i in range(0, teams):
+        recSim[i][2] += np.random.normal(0, scoreDev*np.sqrt(weeks))
+    subRs = makePred(recSim, teams, totWeeks, weeks, scoreDev, names)
     #print(subRs)
     for j in range(0, teams):
         recTemp[j][1] += subRs[j][1]

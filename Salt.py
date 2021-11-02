@@ -11,6 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import settings
 import seaborn as sns
+import copy
+import matplotlib.cm as cm
 
 teams = settings.teams
 
@@ -60,7 +62,7 @@ for i in range(0, teams):
     for j in range(0, weeks-1):
         runningSalt[i][weeks-j-2] += runningSalt[i][weeks-j-1]
     runningSalt[i][:] = runningSalt[i][::-1]
-print(runningSalt)
+#print(runningSalt)
 
 sortWins = np.argsort(exp)
 namessort = np.array(names)[sortWins]
@@ -71,8 +73,7 @@ namesSalt = np.array(names)[sortSalt]
 index = 1.5*np.arange(teams)
 bar_width = 0.8
 
-colors = sns.color_palette("husl", n_colors = teams)
-print(colors)
+colors = cm.jet(np.linspace(1, 0, teams))#sns.color_palette("husl", n_colors = teams)
 for i in range(0, teams):
     plt.plot(runningSalt[sortSalt[teams-i-1]][:], label = names[sortSalt[teams-i-1]], color = colors[i])
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -109,4 +110,44 @@ recs = sorted(records, key=itemgetter(2), reverse=True)
 recs = sorted(recs, key=itemgetter(1), reverse=True)
 for i in range(0, teams):
     recs[i][2] *= weeks
-print(records)
+
+ranks = sorted(records, key=itemgetter(2), reverse=True)
+ranks = sorted(ranks, key=itemgetter(1), reverse=True)
+print(ranks)
+
+SupRecs = copy.deepcopy(records)
+for i in range(0, teams):
+    loser = 1
+    for j in range(0, teams):
+        if(i != j):
+            if(exp[i] < exp[j] and (np.abs(exp[i] - exp[j]) > .01)):
+                loser += 1
+            if(np.abs(exp[i] - exp[j]) < .01):
+                loser += .5
+    SupRecs[i].append(loser)
+    SupRecs[i].append(0)
+    SupRecs[i].append(0)
+SupRecs = sorted(SupRecs, key=itemgetter(2), reverse=True)
+SupRecs = sorted(SupRecs, key=itemgetter(1), reverse=True)
+for i in range(0, teams):
+    SupRecs[i][5] = i + 1
+    SupRecs[i][6] = i + 1 - SupRecs[i][4]
+SaltRecs = sorted(SupRecs, key=itemgetter(6), reverse=True)
+print(SaltRecs)
+
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+SaltRs = column(SaltRecs, 6)[::-1]
+rects1 = plt.barh(index, SaltRs, bar_width)
+maxi = max(SaltRs)
+lines = int(np.round(maxi))
+for i in range(0, lines+1):
+    plt.vlines(i, min(index)-1, max(index)+1, alpha=0.25)
+mini = min(SaltRs)
+lines = int(np.round(np.abs(mini)))
+for i in range(0, lines+1):
+    plt.vlines(-i, min(index)-1, max(index)+1, alpha=0.25)
+plt.xlabel('League Standings Salt')
+plt.yticks(index, column(SaltRecs, 0)[::-1])
+plt.show()

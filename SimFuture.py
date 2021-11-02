@@ -20,7 +20,7 @@ import settings
 #League info and how many seasons to simulate
 totWeeks = 13
 teams = settings.teams
-sims = 100000
+sims = 100#00000
 
 with open('oldgames.txt') as f:
     reader = csv.reader(f, delimiter='\t')
@@ -92,7 +92,7 @@ recs = sorted(recs, key=itemgetter(1), reverse=True)
 for i in range(0, teams):
     recs[i][2] *= weeks
     recordsSim[i][2] *= weeks
-print(records)
+print(recs)
 
 #Open the file with the list of upcoming game info
 with open('futureGames.txt') as f:
@@ -126,6 +126,7 @@ def makePred(records, teams, totWeeks, weeks, scoreDev, names):
 byes = np.zeros(teams)
 play = np.zeros(teams)
 punish = np.zeros(teams)
+six = np.zeros(teams)
 for i in range(0, sims):
     if(i%1000 == 0):
         print(100.0*i/sims)
@@ -162,6 +163,7 @@ for i in range(0, sims):
             maxi = ranks[j][2]
             name = ranks[j][0]
     play[names.index(name)] += 1
+    six[names.index(name)] += 1
     punish[names.index(ranks[teams-1][0])] += 1
 print(byes/sims)
 print(play/sims)
@@ -173,10 +175,12 @@ n_groups = teams
 m1 = byes/sims
 m2 = play/sims
 m3 = punish/sims
+m4 = six/sims
 
 index = 1.5*np.arange(n_groups)
 bar_width = 0.35
 opacity = 0.8
+
 
 rects1 = plt.barh(index, m1, bar_width,
 alpha=opacity,
@@ -188,7 +192,12 @@ alpha=opacity,
 color='g',
 label='POff Prob')
 
-rects2 = plt.barh(index + 2*bar_width, m3, bar_width,
+rects20 = plt.barh(index + bar_width, m4, bar_width,
+alpha=opacity,
+color='yellow',
+label='6 Seed Prob')
+
+rects3 = plt.barh(index + 2*bar_width, m3, bar_width,
 alpha=opacity,
 color='r',
 label='Punish Prob')
@@ -214,7 +223,12 @@ alpha=opacity,
 color='g',
 label='POff Prob')
 
-rects2 = plt.barh(index + 2*bar_width, m3[sorty], bar_width,
+rects20 = plt.barh(index + bar_width, m4[sorty], bar_width,
+alpha=opacity,
+color='yellow',
+label='6 Seed Prob')
+
+rects3 = plt.barh(index + 2*bar_width, m3[sorty], bar_width,
 alpha=opacity,
 color='r',
 label='Punish Prob')
